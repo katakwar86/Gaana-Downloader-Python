@@ -7,6 +7,7 @@ import requests
 import re
 import sys
 import os
+import argparse
 from json import JSONDecoder
 
 import m3u8
@@ -14,6 +15,7 @@ import m3u8
 unpad = lambda s : s[0:-ord(s[-1])]
 REGEX = re.compile('> ({[^<]*}) <')
 JSONDEC = JSONDecoder()
+DOWN_FOLDER = '.'
 
 
 def decryptLink(message):
@@ -49,9 +51,13 @@ def downloadAndParsePage(link):
 
 
 def downloadSong(song):
-    filename = '%s-%s.m4a' % (song['album'], song['title'])
-    if os.path.isfile(filename):
-        print 'Skipping %s file already exists!',filename
+    downDir = DOWN_FOLDER + os.path.sep + song['album']
+    if not os.path.exists(downDir):
+        os.makedirs(downDir)
+
+    filename = song['title']+'.m4a'
+    if os.path.isfile(downDir + os.path.sep+ filename):
+        print 'Skipping %s file already exists!' % (filename)
         return
     with requests.Session() as s:
         r = s.get(song['link'])
@@ -63,18 +69,30 @@ def downloadSong(song):
 
             m3u8_obj = m3u8.loads(r.text)
 
-            with open(filename, 'wb') as f:
+            with open(downDir + os.path.sep+ filename, 'wb') as f:
+                print 'Downloading ',filename
                 for segment in m3u8_obj.segments:
                     req = s.get(segment.uri, stream=True)
                     for chunk in req.iter_content(chunk_size=1024): 
                         if chunk:
                             f.write(chunk)
-            print 'Downloaded ',filename
         else:
             print 'Share the link with dev to look into the error'
 
 
 def main():
+    global DOWN_FOLDER
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--url', help='Gaana.com url to download from', type=str)
+    parser.add_argument('--dir', help='Download Dir', type=str)
+    parser.add_argument('--downall', help='Use it to download all song', action='store_true')
+    args = parser.parse_args()
+    if args.url:
+        input_url = args.url
+    else:
+        input_url = raw_input('Enter the song/album url:').strip()
+    if args.dir:
+        DOWN_FOLDER = args.dir
     print '''
     \033[31m
    _____                           _____                      _                 _           
@@ -87,16 +105,17 @@ def main():
                                                             \033[0m\033[92mBy Arun Kumar Shreevastava\033[0m
 
 '''
-    input_url = raw_input('Enter the song/album url:').strip()
+    
     try:
         songs = downloadAndParsePage(input_url)
     except:
         print 'Error', sys.exc_info()[0]
         return
     for i in range(len(songs)):
-        print i, '%s-%s' % (songs[i]['album'], songs[i]['title'])
-    song_nos = map(int, raw_input('Enter song numbers separated by space, -1 to download all songs:').split())
-    if -1 in song_nos:
+        print i, ': %s-%s' % (songs[i]['album'], songs[i]['title'])
+    if not args.downall:
+        song_nos = map(int, raw_input('Enter song numbers separated by space, -1 to download all songs:').split())
+    if args.downall or -1 in song_nos:
         for song in songs:
             downloadSong(song)
     else:

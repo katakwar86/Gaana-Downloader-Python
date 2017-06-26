@@ -7,23 +7,33 @@ This is my downloader to download songs from [Gaana.com](http://gaana.com) websi
 
 Prerequisite
 ====
-You need Python2.7 and m3u8 library installed installed for the script to work.
+You need Python2.7, requests and m3u8 library installed installed for the script to work.
 
 I used python2.7 but you can also use python3, just make changes in the print statements.
 
 Python2.7		- https://www.python.org/download/releases/2.7/<br>
+requests 		- https://github.com/requests/requests<br>
 m3u8			- https://github.com/globocom/m3u8
 
-You can also install m3u8 using pip
+You can also install requests and m3u8 using pip
 <pre>
+pip install requests
 pip install m3u8
 </pre>
 
 Usage
 ====
-<pre>python2.7 gaana_downloader.py</pre>
+<pre>
+$python2.7 gaana_downloader.py [-h] [--url URL] [--dir DIR] [--downall]
 
-When asked for the song url enter the url of the song/album from the Gaana website. Then enter the song number you want to download or -1 if you want to download all songs from the list.
+optional arguments:
+  -h, --help  show this help message and exit
+  --url URL   Gaana.com url to download from
+  --dir DIR   Download Dir
+  --downall   Use it to download all song
+</pre>
+
+The script will ask for necessary information if optional arguments are not specified.
 
 
 Final Note
